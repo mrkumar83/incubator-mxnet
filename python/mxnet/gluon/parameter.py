@@ -97,7 +97,7 @@ class Parameter(object):
     """
     def __init__(self, name, grad_req='write', shape=None, dtype=mx_real_t,
                  lr_mult=1.0, wd_mult=1.0, init=None, allow_deferred_init=False,
-                 differentiable=True):
+                 differentiable=True, trainable=True):
         self._var = None
         self._data = None
         self._grad = None
@@ -106,7 +106,7 @@ class Parameter(object):
         self._deferred_init = ()
         self._differentiable = differentiable
         self._allow_deferred_init = allow_deferred_init
-        self._grad_req = None
+        self._grad_req = None if trainable == True else 'null'
         self._shape = shape
         self.name = name
         self.dtype = dtype
@@ -675,7 +675,7 @@ class ParameterDict(object):
             self._params[k] = v
 
     def initialize(self, init=initializer.Uniform(), ctx=None, verbose=False,
-                   force_reinit=False):
+                   force_reinit=False, trainable=True):
         """Initializes all Parameters managed by this dictionary to be used for :py:class:`NDArray`
         API. It has no effect when using :py:class:`Symbol` API.
 
@@ -690,11 +690,13 @@ class ParameterDict(object):
             Whether to verbosely print out details on initialization.
         force_reinit : bool, default False
             Whether to force re-initialization if parameter is already initialized.
+        trainable : bool, default True
+            Freezes parameters during training if trainable is False.
         """
         if verbose:
             init.set_verbosity(verbose=verbose)
         for _, v in self.items():
-            v.initialize(None, ctx, init, force_reinit=force_reinit)
+            v.initialize(None, ctx, init, force_reinit=force_reinit, trainable=trainable)
 
     def zero_grad(self):
         """Sets all Parameters' gradient buffer to 0."""
