@@ -187,7 +187,7 @@ class Parameter(object):
             "because the later does not include Parameters of " \
             "nested child Blocks"%(self.name))
 
-    def _load_init(self, data, ctx):
+    def _load_init(self, data, ctx, trainable=True):
         """(Re)initializes by loading from data."""
         if self.shape:
             for self_dim, data_dim in zip(self.shape, data.shape):
@@ -220,6 +220,8 @@ class Parameter(object):
                     self.name, str(ctx), str(self.list_ctx()))
             self.set_data(data)
         self._deferred_init = ()
+        if trainable = False:
+            self.grad_req = 'null'
 
     def _finish_deferred_init(self):
         """Finishes deferred initialization."""
@@ -271,7 +273,7 @@ class Parameter(object):
         return data
 
     def initialize(self, init=None, ctx=None, default_init=initializer.Uniform(),
-                   force_reinit=False):
+                   force_reinit=False, trainable=True):
         """Initializes parameter and gradient arrays. Only used for :py:class:`NDArray` API.
 
         Parameters
@@ -320,6 +322,7 @@ class Parameter(object):
                           "Set force_reinit=True to re-initialize."%self.name,
                           stacklevel=2)
             return
+
         self._data = self._grad = None
 
         if ctx is None:
@@ -337,6 +340,9 @@ class Parameter(object):
 
         self._deferred_init = (init, ctx, default_init, None)
         self._finish_deferred_init()
+
+        if not trainable:
+            self.grad_req = 'null'
 
     def reset_ctx(self, ctx):
         """Re-assign Parameter to other contexts.
@@ -696,7 +702,7 @@ class ParameterDict(object):
         if verbose:
             init.set_verbosity(verbose=verbose)
         for _, v in self.items():
-            v.initialize(None, ctx, init, force_reinit=force_reinit, differentiable=trainable)
+            v.initialize(None, ctx, init, force_reinit=force_reinit, trainable=trainable)
 
     def zero_grad(self):
         """Sets all Parameters' gradient buffer to 0."""
