@@ -150,6 +150,7 @@ class Block(object):
 
     Child :py:class:`Block` assigned this way will be registered and :py:meth:`collect_params`
     will collect their Parameters recursively.
+
     Parameters
     ----------
     prefix : str
@@ -164,16 +165,10 @@ class Block(object):
 
             dense0 = nn.Dense(20)
             dense1 = nn.Dense(20, params=dense0.collect_params())
-    trainable : boolean
-        True if the weights for the block should be trainable. If false, weights are not trainable.
     """
-    def __init__(self, prefix=None, params=None, trainable=True):
+    def __init__(self, prefix=None, params=None):
         self._empty_prefix = prefix == ''
         self._prefix, self._params = _BlockScope.create(prefix, params, self._alias())
-        self._trainable = trainable
-        if self._trainable == False:
-            for param in self._params:
-                param.grad_req = 'null'
         self._name = self._prefix[:-1] if self._prefix.endswith('_') else self._prefix
         self._scope = _BlockScope(self)
         self._children = OrderedDict()
@@ -421,6 +416,7 @@ class Block(object):
     def forward(self, *args):
         """Overrides to implement forward computation using :py:class:`NDArray`. Only
         accepts positional arguments.
+
         Parameters
         ----------
         *args : list of NDArray
@@ -448,8 +444,8 @@ class HybridBlock(Block):
     Refer `Hybrid tutorial <http://mxnet.io/tutorials/gluon/hybrid.html>`_ to see
     the end-to-end usage.
     """
-    def __init__(self, prefix=None, params=None, trainable=True):
-        super(HybridBlock, self).__init__(prefix=prefix, params=params, trainable=True)
+    def __init__(self, prefix=None, params=None):
+        super(HybridBlock, self).__init__(prefix=prefix, params=params)
         self._cached_graph = ()
         self._cached_op = None
         self._out_format = None
@@ -698,14 +694,10 @@ class SymbolBlock(HybridBlock):
     >>> x = mx.nd.random.normal(shape=(16, 3, 224, 224))
     >>> print(feat_model(x))
     """
-    def __init__(self, outputs, inputs, params=None, trainable=True):
+    def __init__(self, outputs, inputs, params=None):
         super(SymbolBlock, self).__init__(prefix=None, params=None)
         self._prefix = ''
-        self._trainable = trainable
-        if self._trainable == False and params is not None:
-            for param in self._params:
-                param.grad_req = 'null'
-        self._params = ParameterDict('', params, trainable)
+        self._params = ParameterDict('', params)
         if isinstance(inputs, symbol.Symbol) and len(inputs.list_outputs()) == 1:
             inputs = [inputs]
         if isinstance(outputs, (list, tuple)) and len(outputs) == 1:
