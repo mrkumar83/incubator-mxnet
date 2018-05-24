@@ -765,7 +765,7 @@ class ParameterDict(object):
         ndarray.save(filename, arg_dict)
 
     def load(self, filename, ctx=None, allow_missing=False,
-             ignore_extra=False, restore_prefix=''):
+             ignore_extra=False, restore_prefix='', trainable=True):
         """Load parameters from file.
 
         filename : str
@@ -779,6 +779,8 @@ class ParameterDict(object):
             present in this ParameterDict.
         restore_prefix : str, default ''
             prepend prefix to names of stored parameters before loading.
+        trainable : bool, default True
+            Freezes parameters during training if trainable is False.
         """
         if restore_prefix:
             for name in self.keys():
@@ -803,4 +805,4 @@ class ParameterDict(object):
                     "Please make sure source and target networks have the same prefix."%(
                         name[lprefix:], filename, _brief_print_list(self._params.keys()))
                 continue
-            self[name]._load_init(arg_dict[name], ctx)
+            self[name]._load_init(arg_dict[name], ctx, trainable=trainable)
