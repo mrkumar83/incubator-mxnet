@@ -97,7 +97,7 @@ class Parameter(object):
     """
     def __init__(self, name, grad_req='write', shape=None, dtype=mx_real_t,
                  lr_mult=1.0, wd_mult=1.0, init=None, allow_deferred_init=False,
-                 differentiable=True, trainable=True):
+                 differentiable=True):
         self._var = None
         self._data = None
         self._grad = None
@@ -106,7 +106,7 @@ class Parameter(object):
         self._deferred_init = ()
         self._differentiable = differentiable
         self._allow_deferred_init = allow_deferred_init
-        self._grad_req = None if trainable == True else 'null'
+        self._grad_req = None
         self._shape = shape
         self.name = name
         self.dtype = dtype
@@ -696,7 +696,7 @@ class ParameterDict(object):
         if verbose:
             init.set_verbosity(verbose=verbose)
         for _, v in self.items():
-            v.initialize(None, ctx, init, force_reinit=force_reinit, trainable=trainable)
+            v.initialize(None, ctx, init, force_reinit=force_reinit, differentiable=trainable)
 
     def zero_grad(self):
         """Sets all Parameters' gradient buffer to 0."""
