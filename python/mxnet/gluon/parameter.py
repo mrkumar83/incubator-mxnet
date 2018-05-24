@@ -220,7 +220,7 @@ class Parameter(object):
                     self.name, str(ctx), str(self.list_ctx()))
             self.set_data(data)
         self._deferred_init = ()
-        if trainable = False:
+        if not trainable:
             self.grad_req = 'null'
 
     def _finish_deferred_init(self):
@@ -322,7 +322,6 @@ class Parameter(object):
                           "Set force_reinit=True to re-initialize."%self.name,
                           stacklevel=2)
             return
-
         self._data = self._grad = None
 
         if ctx is None:
